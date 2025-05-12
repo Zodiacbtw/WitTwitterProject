@@ -69,7 +69,7 @@ public class TweetServiceTest {
 
         assertNotNull(response);
         assertEquals("Test tweet content", response.getContent());
-        assertEquals("testuser", response.getUsername());
+        assertEquals("testuser", response.getUser().getUsername());
         verify(tweetRepository, times(1)).save(any(Tweet.class));
     }
 
