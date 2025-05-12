@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import TweetForm from '../components/TweetForm';
 import TweetItem from '../components/TweetItem';
@@ -11,7 +11,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchTweets = async () => {
+  const fetchTweets = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -26,11 +26,11 @@ const Home = () => {
       setError('Failed to load tweets. Please try again later.');
     }
     setLoading(false);
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     fetchTweets();
-  }, [currentUser]);
+  }, [fetchTweets]);
 
   const handleDeleteTweet = async (id) => {
     try {
