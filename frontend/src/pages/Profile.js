@@ -1,36 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Alert } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { Container, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
+import { useParams, useNavigate } from 'react-router-dom';
 import TweetItem from '../components/TweetItem';
 import tweetService from '../services/tweet.service';
+import { AuthContext } from '../contexts/AuthContext';
 
 const Profile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
   const [user, setUser] = useState(null);
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchUserTweets = async () => {
+    const fetchUserProfile = async () => {
       setLoading(true);
       setError('');
+      
       try {
-        const response = await tweetService.getTweetsByUserId(id);
-        if (response.data.length > 0) {
-          setUser(response.data[0].user);
+        // Doğrudan localStorage'dan kullanıcı bilgilerini al
+        if (currentUser && currentUser.id.toString() === id) {
+          setUser({
+            id: currentUser.id,
+            username: currentUser.username,
+            email: currentUser.email,
+            // Eğer bio ve profileImageUrl varsa onları da ekle
+            bio: currentUser.bio || '',
+            profileImageUrl: currentUser.profileImageUrl || ''
+          });
+        } else {
+          // Kullanıcı bilgilerini tweet'lerden çekmeye çalış
+          const response = await tweetService.getTweetsByUserId(id);
+          if (response.data.length > 0) {
+            setUser(response.data[0].user);
+          } else {
+            setError('User has no tweets. Profile information is limited.');
+          }
         }
-        setTweets(response.data);
-        setLoading(false);
+        
+        // Her durumda tweet'leri getir
+        const tweetResponse = await tweetService.getTweetsByUserId(id);
+        setTweets(tweetResponse.data);
       } catch (err) {
-        console.error(err);
+        console.error('Error loading profile:', err);
         setError('Failed to load user profile. Please try again later.');
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchUserTweets();
-  }, [id]);
+    fetchUserProfile();
+  }, [id, currentUser]);
 
   const handleDeleteTweet = async (id) => {
     try {
@@ -42,54 +64,62 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-center mt-5">Loading profile...</div>;
-  }
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
-  if (error) {
+  if (loading) {
     return (
-      <Container className="mt-4">
-        <Alert variant="danger">{error}</Alert>
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+        <p className="mt-2">Loading profile...</p>
       </Container>
     );
   }
 
   return (
     <Container className="mt-4">
+      {error && <Alert variant="warning">{error}</Alert>}
+      
       {user ? (
         <>
-          <Card className="profile-header">
-            <Row>
-              <Col md={3} className="text-center">
-                {user.profileImageUrl ? (
-                  <img
-                    src={user.profileImageUrl}
-                    alt={user.username}
-                    className="profile-image"
-                  />
-                ) : (
-                  <div
-                    className="profile-image d-flex align-items-center justify-content-center bg-secondary text-white"
-                    style={{ fontSize: '2rem' }}
-                  >
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </Col>
-              <Col md={9}>
-                <h3>{user.username}</h3>
-                <p className="text-muted">{user.email}</p>
-                {user.bio && <p>{user.bio}</p>}
-                <p className="text-muted">
-                  <strong>{tweets.length}</strong> Tweets
-                </p>
-              </Col>
-            </Row>
+          <Card className="profile-header mb-4">
+            <Card.Body>
+              <Row>
+                <Col md={3} className="text-center">
+                  {user.profileImageUrl ? (
+                    <img
+                      src={user.profileImageUrl}
+                      alt={user.username}
+                      className="profile-image rounded-circle"
+                      style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div
+                      className="profile-image d-flex align-items-center justify-content-center bg-secondary text-white rounded-circle mx-auto"
+                      style={{ width: '150px', height: '150px', fontSize: '4rem' }}
+                    >
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </Col>
+                <Col md={9}>
+                  <h3>{user.username}</h3>
+                  <p className="text-muted">{user.email}</p>
+                  {user.bio && <p>{user.bio}</p>}
+                  <p className="text-muted">
+                    <strong>{tweets.length}</strong> {tweets.length === 1 ? 'Tweet' : 'Tweets'}
+                  </p>
+                </Col>
+              </Row>
+            </Card.Body>
           </Card>
 
           <h4 className="mb-4">Tweets</h4>
           {tweets.length === 0 ? (
-            <p className="text-center">This user hasn't posted any tweets yet.</p>
+            <Alert variant="info">This user hasn't posted any tweets yet.</Alert>
           ) : (
             tweets.map((tweet) => (
               <TweetItem
@@ -101,7 +131,17 @@ const Profile = () => {
           )}
         </>
       ) : (
-        <Alert variant="warning">User not found</Alert>
+        <div className="text-center">
+          <Alert variant="warning" className="mb-4">
+            User not found or profile information is unavailable.
+          </Alert>
+          <button 
+            className="btn btn-outline-primary"
+            onClick={handleGoBack}
+          >
+            Go Back
+          </button>
+        </div>
       )}
     </Container>
   );

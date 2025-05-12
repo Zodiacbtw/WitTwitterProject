@@ -1,15 +1,28 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { Container, Row, Col, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Button } from 'react-bootstrap';
 import TweetForm from '../components/TweetForm';
 import TweetItem from '../components/TweetItem';
 import { AuthContext } from '../contexts/AuthContext';
 import tweetService from '../services/tweet.service';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+  const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [authStatus, setAuthStatus] = useState('');
+
+  // Auth durumunu kontrol et
+  useEffect(() => {
+    if (currentUser) {
+      const tokenDetails = `Token: ${currentUser.token ? 'Available' : 'Missing'}`;
+      setAuthStatus(`Logged in as ${currentUser.username}. ${tokenDetails}`);
+    } else {
+      setAuthStatus('Not logged in. Please login to post tweets.');
+    }
+  }, [currentUser]);
 
   const fetchTweets = useCallback(async () => {
     setLoading(true);
@@ -42,14 +55,26 @@ const Home = () => {
     }
   };
 
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
   return (
     <Container>
       {error && <Alert variant="danger">{error}</Alert>}
+      {authStatus && <Alert variant="info">{authStatus}</Alert>}
       
       <Row>
         <Col md={8} className="mx-auto">
-          {currentUser && (
+          {currentUser ? (
             <TweetForm onTweetAdded={fetchTweets} />
+          ) : (
+            <div className="text-center mb-4">
+              <p>You need to be logged in to post tweets</p>
+              <Button variant="primary" onClick={handleLogin}>
+                Login
+              </Button>
+            </div>
           )}
 
           <h4 className="my-4">Recent Tweets</h4>

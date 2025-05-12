@@ -4,9 +4,20 @@ import authHeader from './auth-header';
 const API_URL = 'http://localhost:3000/tweet/';
 
 const createTweet = (content, imageUrl) => {
+  const tweetRequest = {
+    content: content
+  };
+  
+  if (imageUrl) {
+    tweetRequest.imageUrl = imageUrl;
+  }
+  
+  console.log('Sending tweet request:', tweetRequest);
+  console.log('Auth headers:', authHeader());
+  
   return axios.post(
     API_URL,
-    { content, imageUrl },
+    tweetRequest,
     { headers: authHeader() }
   );
 };
@@ -20,9 +31,17 @@ const getTweetById = (id) => {
 };
 
 const updateTweet = (id, content, imageUrl) => {
+  const tweetRequest = {
+    content: content
+  };
+  
+  if (imageUrl) {
+    tweetRequest.imageUrl = imageUrl;
+  }
+  
   return axios.put(
     API_URL + id,
-    { content, imageUrl },
+    tweetRequest,
     { headers: authHeader() }
   );
 };
