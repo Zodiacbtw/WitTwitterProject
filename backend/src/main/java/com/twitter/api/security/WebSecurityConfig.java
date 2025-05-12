@@ -64,7 +64,7 @@ public class WebSecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/api/auth/**").permitAll()
+                auth.requestMatchers("/login", "/register").permitAll()
                     .requestMatchers(HttpMethod.GET, "/tweet/findById", "/tweet/findByUserId").permitAll()
                     .anyRequest().authenticated()
             )

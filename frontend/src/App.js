@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import UserTweetsPage from './pages/UserTweetsPage';
 import AuthService from './services/auth.service';
 import { AuthContext } from './contexts/AuthContext';
 
@@ -41,6 +42,7 @@ function App() {
             <Route path="/login" element={currentUser ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={currentUser ? <Navigate to="/" /> : <Register />} />
             <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/user-tweets" element={<UserTweetsPage />} />
           </Routes>
         </div>
       </div>

@@ -15,6 +15,9 @@ const Navigation = ({ currentUser, logOut }) => {
             <Nav.Link as={Link} to="/">
               Home
             </Nav.Link>
+            <Nav.Link as={Link} to="/user-tweets">
+              User Tweets
+            </Nav.Link>
           </Nav>
 
           {currentUser ? (
