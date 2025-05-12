@@ -1,0 +1,43 @@
+.tweet-container {
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.tweet-action {
+  margin-right: 20px;
+  cursor: pointer;
+  color: #536471;
+}
+
+.tweet-action:hover {
+  color: #1da1f2;
+}
+
+.tweet-action.active {
+  color: #1da1f2;
+}
+
+.profile-header {
+  padding: 20px;
+  border-bottom: 1px solid #e1e8ed;
+  margin-bottom: 20px;
+}
+
+.profile-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.btn-twitter {
+  background-color: #1da1f2;
+  color: white;
+}
+
+.btn-twitter:hover {
+  background-color: #1a91da;
+  color: white;
+} 
