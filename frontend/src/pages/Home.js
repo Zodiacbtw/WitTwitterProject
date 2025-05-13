@@ -4,25 +4,39 @@ import TweetForm from '../components/TweetForm';
 import TweetItem from '../components/TweetItem';
 import { AuthContext } from '../contexts/AuthContext';
 import tweetService from '../services/tweet.service';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import '../styles/transitions.css';
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useContext(AuthContext);
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [authStatus, setAuthStatus] = useState('');
+  const [showAuthStatus, setShowAuthStatus] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
 
-  // Auth durumunu kontrol et
+  // Auth durumunu kontrol et - sadece login işleminden sonra bildirim göster
   useEffect(() => {
-    if (currentUser) {
-      const tokenDetails = `Token: ${currentUser.token ? 'Available' : 'Missing'}`;
-      setAuthStatus(`Logged in as ${currentUser.username}. ${tokenDetails}`);
-    } else {
-      setAuthStatus('Not logged in. Please login to post tweets.');
+    // Sadece state'te 'fromLogin' parametresi varsa bildirim göster
+    if (location.state && location.state.fromLogin && currentUser) {
+      setAuthMessage(`Logged in as ${currentUser.username}`);
+      setShowAuthStatus(true);
+      
+      // 5 saniye sonra mesajı kaldır
+      const timer = setTimeout(() => {
+        setShowAuthStatus(false);
+        // State'i temizle ki yeniden yönlendirmelerde bildirim tekrar gösterilmesin
+        window.history.replaceState({}, document.title);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    } else if (!currentUser) {
+      setAuthMessage('Not logged in. Please login to post tweets.');
+      setShowAuthStatus(false); // Normal durumda gizli olsun
     }
-  }, [currentUser]);
+  }, [currentUser, location.state]);
 
   const fetchTweets = useCallback(async () => {
     setLoading(true);
@@ -62,7 +76,14 @@ const Home = () => {
   return (
     <Container>
       {error && <Alert variant="danger">{error}</Alert>}
-      {authStatus && <Alert variant="info">{authStatus}</Alert>}
+      
+      {showAuthStatus && (
+        <div className={`auth-notification ${showAuthStatus ? 'show' : 'hide'}`}>
+          <Alert variant="info" className="mb-0">
+            {authMessage}
+          </Alert>
+        </div>
+      )}
       
       <Row>
         <Col md={8} className="mx-auto">

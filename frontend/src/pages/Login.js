@@ -21,7 +21,7 @@ const Login = () => {
     try {
       const response = await AuthService.login(username, password);
       setCurrentUser(response);
-      navigate('/');
+      navigate('/', { state: { fromLogin: true } });
     } catch (error) {
       const resMessage =
         (error.response &&
