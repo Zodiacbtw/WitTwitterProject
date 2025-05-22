@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Container, Row, Col, Alert, Button } from 'react-bootstrap';
 import TweetForm from '../components/TweetForm';
-import TweetItem from '../components/TweetItem';
+import TweetItem from '../components/TweetItem'; // Bu dosyanın var olduğunu varsayıyorum
 import { AuthContext } from '../contexts/AuthContext';
 import tweetService from '../services/tweet.service';
 import { useNavigate, useLocation } from 'react-router-dom';
-import '../styles/transitions.css';
+import '../styles/transitions.css'; // Bu dosyanın var olduğunu varsayıyorum
 
 const Home = () => {
   const navigate = useNavigate();
@@ -17,56 +17,53 @@ const Home = () => {
   const [showAuthStatus, setShowAuthStatus] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
 
-  // Auth durumunu kontrol et - sadece login işleminden sonra bildirim göster
   useEffect(() => {
-    // Sadece state'te 'fromLogin' parametresi varsa bildirim göster
     if (location.state && location.state.fromLogin && currentUser) {
       setAuthMessage(`Logged in as ${currentUser.username}`);
       setShowAuthStatus(true);
-      
-      // 5 saniye sonra mesajı kaldır
       const timer = setTimeout(() => {
         setShowAuthStatus(false);
-        // State'i temizle ki yeniden yönlendirmelerde bildirim tekrar gösterilmesin
         window.history.replaceState({}, document.title);
       }, 5000);
-      
       return () => clearTimeout(timer);
     } else if (!currentUser) {
       setAuthMessage('Not logged in. Please login to post tweets.');
-      setShowAuthStatus(false); // Normal durumda gizli olsun
+      setShowAuthStatus(false);
     }
   }, [currentUser, location.state]);
 
-  const fetchTweets = useCallback(async () => {
+  const fetchFeed = useCallback(async () => { // Adını fetchFeed olarak değiştirdim
     setLoading(true);
     setError('');
     try {
-      if (currentUser) {
-        const response = await tweetService.getTweetsByUserId(currentUser.id);
-        setTweets(response.data);
-      } else {
-        setTweets([]);
-      }
+      // Artık currentUser'a bağlı değil, tüm feed'i çekiyoruz
+      const response = await tweetService.getTweetFeed(); // YENİ SERVİS ÇAĞRISI
+      console.log('Home page - Tweet feed response:', response.data);
+      setTweets(response.data);
     } catch (error) {
-      console.error('Error fetching tweets:', error);
-      setError('Failed to load tweets. Please try again later.');
+      console.error('Error fetching tweet feed:', error);
+      setError(error.response?.data?.message || 'Failed to load tweet feed. Please try again later.');
     }
     setLoading(false);
-  }, [currentUser]);
+  }, []); // Bağımlılık array'i boş, sadece mount'ta çalışır
 
   useEffect(() => {
-    fetchTweets();
-  }, [fetchTweets]);
+    fetchFeed();
+  }, [fetchFeed]);
 
   const handleDeleteTweet = async (id) => {
     try {
       await tweetService.deleteTweet(id);
-      setTweets(tweets.filter((tweet) => tweet.id !== id));
+      // fetchFeed(); // Veya state'i direkt güncelle
+      setTweets(prevTweets => prevTweets.filter((tweet) => tweet.id !== id));
     } catch (error) {
       console.error('Error deleting tweet:', error);
       setError('Failed to delete tweet. Please try again later.');
     }
+  };
+
+  const handleTweetAdded = () => {
+    fetchFeed(); // Yeni tweet eklendiğinde feed'i yenile
   };
 
   const handleLogin = () => {
@@ -76,7 +73,7 @@ const Home = () => {
   return (
     <Container>
       {error && <Alert variant="danger">{error}</Alert>}
-      
+
       {showAuthStatus && (
         <div className={`auth-notification ${showAuthStatus ? 'show' : 'hide'}`}>
           <Alert variant="info" className="mb-0">
@@ -84,11 +81,11 @@ const Home = () => {
           </Alert>
         </div>
       )}
-      
+
       <Row>
         <Col md={8} className="mx-auto">
           {currentUser ? (
-            <TweetForm onTweetAdded={fetchTweets} />
+            <TweetForm onTweetAdded={handleTweetAdded} />
           ) : (
             <div className="text-center mb-4">
               <p>You need to be logged in to post tweets</p>
@@ -98,15 +95,13 @@ const Home = () => {
             </div>
           )}
 
-          <h4 className="my-4">Recent Tweets</h4>
-          
+          <h4 className="my-4">Home Feed</h4>
+
           {loading ? (
             <p className="text-center">Loading tweets...</p>
           ) : tweets.length === 0 ? (
             <p className="text-center">
-              {currentUser 
-                ? "You haven't posted any tweets yet." 
-                : "Please log in to see tweets."}
+              No tweets to display in the feed.
             </p>
           ) : (
             tweets.map((tweet) => (
@@ -114,7 +109,7 @@ const Home = () => {
                 key={tweet.id}
                 tweet={tweet}
                 onDelete={handleDeleteTweet}
-                refreshTweets={fetchTweets}
+                refreshTweets={fetchFeed} // TweetItem'a refresh fonksiyonu geçirebiliriz
               />
             ))
           )}
@@ -124,4 +119,4 @@ const Home = () => {
   );
 };
 
-export default Home; 
+export default Home;

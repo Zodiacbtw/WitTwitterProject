@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.Builder; // Lombok Builder importu
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -18,7 +18,7 @@ import java.util.Set;
 @Entity
 @Table(name = "tweets")
 @Data
-@Builder
+@Builder // Bu anotasyon, default değerleri kullanmak için @Builder.Default'a ihtiyaç duyar
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
@@ -40,12 +40,15 @@ public class Tweet {
     private User user;
 
     @OneToMany(mappedBy = "tweet", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default // YENİ EKLENDİ
     private Set<Comment> comments = new HashSet<>();
 
     @OneToMany(mappedBy = "tweet", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default // YENİ EKLENDİ
     private Set<Like> likes = new HashSet<>();
 
     @OneToMany(mappedBy = "tweet", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default // YENİ EKLENDİ
     private Set<Retweet> retweets = new HashSet<>();
 
     @CreatedDate
@@ -55,4 +58,4 @@ public class Tweet {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-} 
+}

@@ -1,6 +1,7 @@
 package com.twitter.api.service;
 
 import com.twitter.api.dto.MessageResponse;
+import com.twitter.api.service.TweetService;
 import com.twitter.api.dto.RetweetRequest;
 import com.twitter.api.dto.RetweetResponse;
 import com.twitter.api.dto.TweetResponse;

@@ -26,7 +26,7 @@ import java.util.Arrays;
 @Configuration
 @EnableMethodSecurity
 public class WebSecurityConfig {
-    
+
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
@@ -41,10 +41,8 @@ public class WebSecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
-        
         return authProvider;
     }
 
@@ -63,31 +61,34 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/login", "/register").permitAll()
+            .authorizeHttpRequests(auth ->
+                auth
+                    .requestMatchers("/login", "/register").permitAll()
                     .requestMatchers(HttpMethod.GET, "/tweet/findById", "/tweet/findByUserId").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/tweet/feed").permitAll() // YENİ ENDPOINT İÇİN İZİN
+                    // .requestMatchers(HttpMethod.POST, "/tweet", "/tweet/").permitAll() // BU SATIRI SİLDİK/YORUMA ALDIK
                     .anyRequest().authenticated()
             )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         http.authenticationProvider(authenticationProvider());
-        
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3200"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        configuration.setExposedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
         configuration.setAllowCredentials(true);
-        
+        configuration.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
         return source;
     }
-} 
+}
